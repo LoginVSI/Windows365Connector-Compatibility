@@ -86,21 +86,31 @@ public class Windows365ConnectorScript : ConnectorScriptBase
         const int globalWaitInSeconds = 5;
         const int globalCpmToType = 1000;
 
-        if (!IsItInSignInState(globalWaitInSeconds) && !TryResetToSignInState(TimeoutSeconds, globalWaitInSeconds))
+        if (IsItInSignInState(globalWaitInSeconds))
+        {
+            if (_windowElement is null)
+                throw new Exception("HandleSignInFlow: Window element is null");
+
+            _cancellationToken.ThrowIfCancellationRequested();
+            var signInButton = _windowElement.FindAutomationElementByXPathOrInformation("//Group/Button[@Name=\"Sign in\"]",
+                                                                                        "",
+                                                                                        "",
+                                                                                        "Sign in",
+                                                                                        "Button",
+                                                                                        globalWaitInSeconds);
+
+            _cancellationToken.ThrowIfCancellationRequested();
+            CleanUpAuthWindows(globalWaitInSeconds);
+
+            signInButton.Click();
+
+            Wait(1);
+        }
+        else if (!TryResetToSignInState(TimeoutSeconds, true, globalWaitInSeconds))
             throw new Exception($"HandleSignInFlow: Could not reset to sign-in state after {TimeoutSeconds}s");
 
         if (_windowElement is null)
             throw new Exception("HandleSignInFlow: Window element is null");
-
-        _cancellationToken.ThrowIfCancellationRequested();
-        var signInButton = _windowElement.FindAutomationElementByXPathOrInformation("//Group/Button[@Name=\"Sign in\"]", "", "", "Sign in", "Button", globalWaitInSeconds);
-
-        _cancellationToken.ThrowIfCancellationRequested();
-        CleanUpAuthWindows(globalWaitInSeconds);
-
-        signInButton.Click();
-
-        Wait(1);
 
         _cancellationToken.ThrowIfCancellationRequested();
         var useAnotherAccount = _windowElement.FindAutomationElementByXPathOrInformation("//Group/List/Button[@ClassName=\"account-button\"][@Name=\"Use another account\"]",
@@ -293,7 +303,7 @@ public class Windows365ConnectorScript : ConnectorScriptBase
                                                                        "", "TscShellContainerClass", $"{CloudPcTitle}*", "Window",
                                                                        globalWaitInSeconds,
                                                                        continueOnError: true);
-        connectCard.Click(forceFocus: false);
+        connectCard.Click(forceFocus: true);
 
         LogInfo("Waiting for connection to establish...");
 
@@ -314,7 +324,7 @@ public class Windows365ConnectorScript : ConnectorScriptBase
         MainWindow.Focus();
         Wait(globalWaitInSeconds);
 
-        if (!TryResetToSignInState(TimeoutSeconds, globalWaitInSeconds))
+        if (!TryResetToSignInState(TimeoutSeconds, false, globalWaitInSeconds))
             LogWarning("Could not reset to sign-in state after connection");
     }
 
@@ -440,8 +450,11 @@ public class Windows365ConnectorScript : ConnectorScriptBase
                                                                        "", "ApplicationFrameWindow", "", "Window",
                                                                        waitInSeconds, continueOnError: true);
 
+        if (authWindows == null)
+            return;
+
         foreach (var window in authWindows)
-            window.AsWindow().Close();
+            window?.AsWindow().Close();
     }
 
     private void CleanupAndExit()
@@ -474,7 +487,7 @@ public class Windows365ConnectorScript : ConnectorScriptBase
         return true;
     }
 
-    private bool TryResetToSignInState(int timeoutSeconds, int waitInSeconds)
+    private bool TryResetToSignInState(int timeoutSeconds, bool useAnotherAccount, int waitInSeconds)
     {
         LogDebug("Resetting to sign-in state...");
 
@@ -549,6 +562,12 @@ public class Windows365ConnectorScript : ConnectorScriptBase
 
                 if (useAnother != null)
                 {
+                    if (useAnotherAccount)
+                    {
+                        LogInfo("Use another account button found - ready for authentication");
+                        return true;
+                    }
+
                     Wait(1);
 
                     LogDebug("Closing account picker dialog");
@@ -564,12 +583,20 @@ public class Windows365ConnectorScript : ConnectorScriptBase
 
                 _cancellationToken.ThrowIfCancellationRequested();
                 var signInProbe = _windowElement.FindAutomationElementByXPathOrInformation("//Group/Button[@Name=\"Sign in\"]",
-                                                                                           "", "", "Sign in", "Button",
-                                                                                           waitInSeconds);
+                                                                                           "", "", "Sign in", "Button", waitInSeconds, continueOnError: true);
 
                 if (signInProbe != null)
                 {
                     LogInfo("Sign-in button found - ready for authentication");
+                    return true;
+                }
+
+                var nothingHereYet = devicesWindow.FindAutomationElementByXPathOrInformation("//Document/Group/Group/Group/Text[@Name=\"Nothing here yet\"]", 
+                                                                                                 "", "", "Nothing here yet", "Text", 5, continueOnError: true);
+
+                if (nothingHereYet != null)
+                {
+                    LogInfo("Sign-out completed");
                     return true;
                 }
             }
