@@ -1,3 +1,7 @@
+// Version: Custom-2.0.964.0
+// Target: Windows App
+// Target version: 2.0.964.0
+
 using System;
 using System.Linq;
 using System.Threading;
