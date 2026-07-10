@@ -6,7 +6,7 @@ Microsoft may introduce Windows App updates before the next Login Enterprise rel
 
 For the official Login Enterprise Windows 365 Connector documentation, see:
 
-https://docs.loginvsi.com/login-enterprise/6.6/windows-365-preview
+https://docs.loginvsi.com/login-enterprise/
 
 ## Validated Windows App Version
 
@@ -107,9 +107,51 @@ SUCCESS: Custom connector script deleted.
 Login Enterprise should now use the built-in/default connector script matching behavior.
 ```
 
+## Retrieve Built-In and Custom Connector Scripts
+
+Login Enterprise 6.7 adds Public API operations for retrieving Windows 365 Connector scripts.
+
+Use `Get-Windows365ConnectorScripts.ps1` to:
+
+- List the built-in connector scripts available for supported Windows App versions
+- Download a specific built-in connector script
+- Download the newest available built-in connector script
+- Optionally back up the currently configured custom connector script
+
+### Retrieve Example
+
+From the root of this repository:
+
+```powershell
+.\Get-Windows365ConnectorScripts.ps1 `
+    -ApplianceUrl "https://your-login-enterprise-appliance"
+```
+
+The script lists the available built-in connector scripts and downloads the newest version to the current folder.
+
+To download a specific Windows App target version:
+
+```powershell
+.\Get-Windows365ConnectorScripts.ps1 `
+    -ApplianceUrl "https://your-login-enterprise-appliance" `
+    -TargetVersion "2.0.1129.0"
+```
+
+To also back up the currently configured custom connector script:
+
+```powershell
+.\Get-Windows365ConnectorScripts.ps1 `
+    -ApplianceUrl "https://your-login-enterprise-appliance" `
+    -IncludeCustomBackup
+```
+
+When prompted, paste your Login Enterprise API token.
+
+No administrator rights are required.
+
 ## Certificate Trust
 
-Start by running the upload script normally.
+Start by running the scripts normally.
 
 If the machine running PowerShell trusts the Login Enterprise appliance certificate, no additional certificate steps are needed.
 
@@ -133,7 +175,7 @@ https://learn.microsoft.com/windows-hardware/drivers/install/trusted-root-certif
 
 ### Lab or Troubleshooting Use Only
 
-For lab, test, or troubleshooting scenarios, the upload and removal scripts also support:
+For lab, test, or troubleshooting scenarios, the upload, retrieval, and removal scripts support:
 
 ```powershell
 -IgnoreCertificateErrors
@@ -145,6 +187,15 @@ Upload example:
 .\Upload-Windows365ConnectorScript.ps1 `
     -ApplianceUrl "https://your-login-enterprise-appliance" `
     -ScriptPath ".\WindowsApp-2.0.964.0\Windows365ConnectorScript.cs" `
+    -IgnoreCertificateErrors
+```
+
+Retrieve example:
+
+```powershell
+.\Get-Windows365ConnectorScripts.ps1 `
+    -ApplianceUrl "https://your-login-enterprise-appliance" `
+    -IncludeCustomBackup `
     -IgnoreCertificateErrors
 ```
 
@@ -187,6 +238,7 @@ After replacing the file, run your Login Enterprise test scenario again.
 ## Notes
 
 - For Login Enterprise 6.6 and later, API-based script management is preferred because it centralizes the script instead of requiring per-Launcher file replacement.
+- Login Enterprise 6.7 adds API operations for listing and downloading built-in connector scripts and retrieving the current custom script.
 - If a custom script is uploaded, Login Enterprise uses that custom script instead of automatic matching against built-in script versions.
 - Use the removal script if you want to return to built-in/default script matching.
 - Keep a backup of any existing script before replacing it manually.
