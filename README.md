@@ -8,21 +8,16 @@ For the official Login Enterprise Windows 365 Connector documentation, see:
 
 https://docs.loginvsi.com/login-enterprise/
 
-## Validated Windows App Version
+## Validated Windows App Versions
 
-For example, the script in the folder:
+Compatibility scripts are currently available for:
 
-```text
-WindowsApp-2.0.964.0
-```
+- `WindowsApp-2.0.964.0`
+- `WindowsApp-2.0.1314.0`
 
-was validated against:
+Each folder contains a `Windows365ConnectorScript.cs` validated against the corresponding Windows App version.
 
-```text
-Windows App version 2.0.964.0
-```
-
-If Microsoft changes the Windows App UI again, a new folder can be added with a validated script for that version.
+If Microsoft changes the Windows App UI again, additional folders can be added with validated scripts for those versions.
 
 ## Script Metadata Header
 
