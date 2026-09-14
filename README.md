@@ -14,6 +14,7 @@ Compatibility scripts are currently available for:
 
 - `WindowsApp-2.0.964.0`
 - `WindowsApp-2.0.1314.0`
+- `WindowsApp-2.0.1373.0`
 
 Each folder contains a `Windows365ConnectorScript.cs` validated against the corresponding Windows App version.
 
